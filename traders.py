@@ -50,6 +50,8 @@ def refresh_tabs(event):
     elif selected_index == 3:
         market.refresh_marketplace()
         market.refresh_location(market_tab, login.widgets["trader_token"])
+    elif selected_index == 4:
+        locations.refresh_locations_tab()
 
 
 ###

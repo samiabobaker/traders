@@ -1,145 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
+import requests
 
-planets = {
-    "system": {
-        "symbol": "OE",
-        "name": "Omicron Eridani",
-        "locations": [
-            {
-                "symbol": "OE-PM",
-                "type": "PLANET",
-                "name": "Prime",
-                "x": -19,
-                "y": 3,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-PM-TR",
-                "type": "MOON",
-                "name": "Tritus",
-                "x": -20,
-                "y": 5,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-CR",
-                "type": "PLANET",
-                "name": "Carth",
-                "x": 4,
-                "y": -13,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-KO",
-                "type": "PLANET",
-                "name": "Koria",
-                "x": -49,
-                "y": 1,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-UC",
-                "type": "PLANET",
-                "name": "Ucarro",
-                "x": -17,
-                "y": -72,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-UC-AD",
-                "type": "MOON",
-                "name": "Ado",
-                "x": -15,
-                "y": -73,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-UC-OB",
-                "type": "MOON",
-                "name": "Obo",
-                "x": -17,
-                "y": -74,
-                "allowsConstruction": False,
-                "structures": []
-            },
-            {
-                "symbol": "OE-NY",
-                "type": "ASTEROID",
-                "name": "Nyon",
-                "x": 43,
-                "y": -46,
-                "allowsConstruction": True,
-                "structures": [
-                    {
-                        "id": "ckzlbb9z1138925615s60i5sfagz",
-                        "type": "RARE_EARTH_MINE",
-                        "location": "OE-NY",
-                        "ownedBy": {
-                            "username": "01FVQT807GAASBZFZ2D62Y68SE"
-                        }
-                    }
-                ]
-            },
-            {
-                "symbol": "OE-BO",
-                "type": "GAS_GIANT",
-                "name": "Bo",
-                "x": -59,
-                "y": 60,
-                "allowsConstruction": True,
-                "structures": [
-                    {
-                        "id": "ckzdl3im597518115s6v0cle2ia",
-                        "type": "FUEL_REFINERY",
-                        "location": "OE-BO",
-                        "ownedBy": {
-                            "username": "elilamb-nz"
-                        }
-                    },
-                    {
-                        "id": "ckzlhlnad91634615s67d4px38q",
-                        "type": "RESEARCH_OUTPOST",
-                        "location": "OE-BO",
-                        "ownedBy": {
-                            "username": "01FVQT807GAASBZFZ2D62Y68SE"
-                        }
-                    }
-                ]
-            },
-            {
-                "symbol": "OE-W-XV",
-                "type": "WORMHOLE",
-                "name": "Wormhole",
-                "x": 5,
-                "y": -101,
-                "allowsConstruction": False,
-                "messages": [
-                    "Extensive research has revealed a partially functioning warp gate harnessing the power of an unstable but traversable wormhole.",
-                    "The scientific community has determined a means of stabilizing the ancient structure.",
-                    "Enter at your own risk.",
-                    "POST https://api.spacetraders.io/game/structures/:structureId/deposit shipId=:shipId good=:goodSymbol quantity=:quantity",
-                    "POST https://api.spacetraders.io/my/warp-jump shipId=:shipId"
-                ],
-                "structures": [
-                    {
-                        "id": "cky9igrip3241p5wwwbq6go2r",
-                        "type": "WARP_GATE",
-                        "location": "OE-W-XV"
-                    }
-                ]
-            }
-        ]
-    }
-}
 
-planets = planets["system"]
+
+SYSTEMS = "https://api.spacetraders.io/game/systems"
+
+proxy_workaround = {"proxies": {"http": None, "https": None}}
+# proxy_workaround = {"proxies": {"https": "http://127.0.0.1:8080"}, "verify": False}
+
+trader_token = None
 
 planet_tags = []
 
@@ -234,15 +104,28 @@ def drag(event):
         just_pressed = False
     update_planets()
 
-
-def create_locations_tab(parent, login_token):
-    global canvas
-    canvas = tk.Canvas(parent, width=500, height=400)
-    canvas.grid()
-
+def refresh_locations_tab():
+    #Update API
+    try:
+        response = requests.get(SYSTEMS, {"token": trader_token.get()}, **proxy_workaround)
+        if response.status_code == 200:
+            planets = response.json()["systems"][0]
+    except ConnectionError as ce:
+        print("Failed:", ce)
+    #Draw to Canvas
     canvas.create_rectangle(0, 0, 500, 400, fill="black")
 
     initialise_planets(planets)
+
+
+def create_locations_tab(parent, login_token):
+
+    global canvas, trader_token
+    trader_token = login_token
+    canvas = tk.Canvas(parent, width=500, height=400)
+    canvas.grid()
+
+    
 
 
 

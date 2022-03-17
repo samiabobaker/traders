@@ -31,6 +31,10 @@ selected_planet = ""
 
 selected_planet_vars = {}
 
+planets_data = []
+
+systems = []
+
 def planet_with_tag(tag):
     planet = list(filter(lambda x: x["tag"] == tag, planet_tags))[0]
     return planet
@@ -53,7 +57,6 @@ def initialise_planets(planets):
 
     for planet in planets["locations"]:
         x1, y1, x2, y2 = get_corner_coords(planet["x"]*SCALE, planet["y"]*SCALE)
-        print(planet)
 
         tag = {
           "tag":canvas.create_oval(x1, y1, x2, y2, fill="white"),
@@ -127,28 +130,42 @@ def focus_on(planet):
     update_planets()
 
 def refresh_locations_tab():
+    global planets_data, systems
     #Update API
     try:
         response = requests.get(SYSTEMS, {"token": trader_token.get()}, **proxy_workaround)
         if response.status_code == 200:
-            planets = response.json()["systems"][0]
+            planets_data = response.json()
+            systems = [system["name"] for system in planets_data["systems"]]
+            dropdown.set_menu(systems[0], *systems)
+            load_system(planets_data, 0)
             
     except ConnectionError as ce:
         print("Failed:", ce)
-    #Draw to Canvas
+
+
     
+    #Draw to Canvas
+
+def load_system(planets_data, index):
+    planets = planets_data["systems"][index]  
     canvas.create_rectangle(0, 0, 500, 400, fill="black")
 
     initialise_planets(planets)
+
+def change_system(*args):
+    global planet_tags
+    planet_tags = []
+    system = selected_system.get()
+    index = systems.index(system)
+    load_system(planets_data, index)
 
     
 
 
 def create_locations_tab(parent, login_token):
 
-    global selected_planet_vars
-
-    global canvas, trader_token
+    global canvas, trader_token, dropdown, selected_planet_vars, selected_system
     trader_token = login_token
 
     #Canvas
@@ -168,7 +185,10 @@ def create_locations_tab(parent, login_token):
 
     #Text
     text_frame = ttk.Frame(parent, padding = 5)
-
+    selected_system = tk.StringVar()
+    selected_system.trace("w", change_system)
+    dropdown = ttk.OptionMenu(text_frame, selected_system, systems, *systems)
+    dropdown.grid()
     ttk.Label(text_frame, textvariable=selected_planet_vars["name"]).grid(sticky=tk.EW)
     ttk.Label(text_frame, textvariable=selected_planet_vars["type"]).grid(sticky=tk.EW)
     ttk.Label(text_frame, textvariable=selected_planet_vars["coords"]).grid(sticky=tk.EW)

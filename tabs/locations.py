@@ -122,7 +122,7 @@ def create_locations_tab(parent, login_token):
 
     global canvas, trader_token
     trader_token = login_token
-    canvas = tk.Canvas(parent, width=500, height=400)
+    canvas = tk.Canvas(parent, width=300, height=300)
     canvas.grid()
 
     

@@ -29,6 +29,8 @@ SCALE = 5
 
 selected_planet = ""
 
+selected_planet_vars = {}
+
 def planet_with_tag(tag):
     planet = list(filter(lambda x: x["tag"] == tag, planet_tags))[0]
     return planet
@@ -38,19 +40,29 @@ def set_selected_planet(tag):
     tag = canvas.find_withtag("current")[0]
     planet = planet_with_tag(tag)
     selected_planet = planet
-    print(planet)
     update_planets()
+    update_text(selected_planet)
+
+def update_text(planet):
+    properties = ["name", "type", "coords"]
+    for p in properties:
+        selected_planet_vars[p].set(planet[p])
+
 
 def initialise_planets(planets):
 
     for planet in planets["locations"]:
         x1, y1, x2, y2 = get_corner_coords(planet["x"]*SCALE, planet["y"]*SCALE)
+        print(planet)
 
         tag = {
           "tag":canvas.create_oval(x1, y1, x2, y2, fill="white"),
           "initial_x": planet["x"]*SCALE,
           "initial_y": planet["y"]*SCALE,
-          "symbol": planet["symbol"]
+          "symbol": planet["symbol"],
+          "type": planet["type"],
+          "name": planet["name"],
+          "coords": f'{planet["x"]}, {planet["y"]}'
         }
 
         planet_tags.append(tag)
@@ -134,17 +146,37 @@ def refresh_locations_tab():
 
 def create_locations_tab(parent, login_token):
 
+    global selected_planet_vars
+
     global canvas, trader_token
     trader_token = login_token
 
     #Canvas
     canvas = tk.Canvas(parent, width=CANVAS_SIZE, height=CANVAS_SIZE)
     
-    canvas.grid()
+    canvas.grid(row = 0, column = 0)
 
     canvas.bind("<Motion>", drag)
     canvas.bind("<ButtonPress-1>", lambda event: set_mouse_pressed(True))
     canvas.bind("<ButtonRelease-1>", lambda event: set_mouse_pressed(False))
+
+    selected_planet_vars = {
+        "name": tk.StringVar(),
+        "type": tk.StringVar(),
+        "coords": tk.StringVar()
+    }
+
+    #Text
+    text_frame = ttk.Frame(parent, padding = 5)
+
+    ttk.Label(text_frame, textvariable=selected_planet_vars["name"]).grid(sticky=tk.EW)
+    ttk.Label(text_frame, textvariable=selected_planet_vars["type"]).grid(sticky=tk.EW)
+    ttk.Label(text_frame, textvariable=selected_planet_vars["coords"]).grid(sticky=tk.EW)
+
+    text_frame.grid(row=0, column=1)
+    text_frame.columnconfigure(0, weight=1)
+    parent.columnconfigure(1, weight=1)
+
 
 
 

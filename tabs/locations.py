@@ -14,6 +14,7 @@ trader_token = None
 planet_tags = []
 
 PLANET_SIZE = 10
+CANVAS_SIZE = 300
 
 is_mouse_pressed = False
 just_pressed = False
@@ -37,6 +38,7 @@ def set_selected_planet(tag):
     tag = canvas.find_withtag("current")[0]
     planet = planet_with_tag(tag)
     selected_planet = planet
+    print(planet)
     update_planets()
 
 def initialise_planets(planets):
@@ -54,6 +56,7 @@ def initialise_planets(planets):
         planet_tags.append(tag)
 
         canvas.tag_bind(tag["tag"], "<Button-1>", set_selected_planet)
+    focus_on(planet_tags[0])
 
   
 
@@ -104,31 +107,45 @@ def drag(event):
         just_pressed = False
     update_planets()
 
+#Moves planet to center
+def focus_on(planet):
+    global x_diff, y_diff
+    x_diff = CANVAS_SIZE/2  - planet["initial_x"]
+    y_diff = CANVAS_SIZE/2 - planet["initial_y"]
+    update_planets()
+
 def refresh_locations_tab():
     #Update API
     try:
         response = requests.get(SYSTEMS, {"token": trader_token.get()}, **proxy_workaround)
         if response.status_code == 200:
             planets = response.json()["systems"][0]
+            
     except ConnectionError as ce:
         print("Failed:", ce)
     #Draw to Canvas
+    
     canvas.create_rectangle(0, 0, 500, 400, fill="black")
 
     initialise_planets(planets)
+
+    
 
 
 def create_locations_tab(parent, login_token):
 
     global canvas, trader_token
     trader_token = login_token
-    canvas = tk.Canvas(parent, width=300, height=300)
-    canvas.grid()
 
+    #Canvas
+    canvas = tk.Canvas(parent, width=CANVAS_SIZE, height=CANVAS_SIZE)
     
-
-
+    canvas.grid()
 
     canvas.bind("<Motion>", drag)
     canvas.bind("<ButtonPress-1>", lambda event: set_mouse_pressed(True))
     canvas.bind("<ButtonRelease-1>", lambda event: set_mouse_pressed(False))
+
+
+
+
